@@ -1,5 +1,6 @@
 const authService = require('./auth.service');
 const ApiResponse = require('../../utils/ApiResponse');
+const ApiError = require('../../utils/ApiError');
 const asyncHandler = require('../../utils/asyncHandler');
 
 const register = asyncHandler(async (req, res) => {
@@ -16,6 +17,10 @@ const login = asyncHandler(async (req, res) => {
 
 const refresh = asyncHandler(async (req, res) => {
   const token = req.body.refreshToken || req.headers['x-refresh-token'];
+  if (!token) {
+    throw new ApiError(400, 'Refresh token is required');
+  }
+
   const result = await authService.refreshSession(token);
   return res
     .status(200)
