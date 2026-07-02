@@ -48,9 +48,26 @@ const searchProducts = async (q) => listProducts({ search: q });
 
 const getProductsByCategory = async (categoryId) => listProducts({ category: categoryId });
 
+const createProduct = async (payload) => productRepository.createProduct(payload);
+
+const updateProduct = async (id, payload) => {
+  const updated = await productRepository.updateById(id, payload);
+  if (!updated) throw new ApiError(404, 'Product not found');
+  return updated;
+};
+
+const deleteProduct = async (id) => {
+  const deleted = await productRepository.deleteById(id);
+  if (!deleted) throw new ApiError(404, 'Product not found');
+  return deleted;
+};
+
 module.exports = {
   listProducts,
   getProductById,
   searchProducts,
   getProductsByCategory,
+  createProduct,
+  updateProduct,
+  deleteProduct,
 };
