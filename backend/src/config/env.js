@@ -1,7 +1,7 @@
 const dotenv = require('dotenv');
 const Joi = require('joi');
 
-dotenv.config({ path: './backend/.env' });
+dotenv.config();
 
 const envSchema = Joi.object({
   PORT: Joi.number().default(5000),
