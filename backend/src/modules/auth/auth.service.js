@@ -1,6 +1,10 @@
 const bcrypt = require('bcryptjs');
 const authRepository = require('./auth.repository');
-const { generateAccessToken, generateRefreshToken } = require('../../utils/jwt');
+const {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} = require('../../utils/jwt');
 const ApiError = require('../../utils/ApiError');
 
 const buildTokenPayload = (user) => ({ id: user._id.toString(), role: user.role });
@@ -52,7 +56,37 @@ const login = async ({ email, password }) => {
   return { user: safeUser, tokens };
 };
 
+const refreshSession = async (refreshToken) => {
+  if (!refreshToken) {
+    throw new ApiError(401, 'Refresh token is required');
+  }
+
+  let decoded;
+  try {
+    decoded = verifyRefreshToken(refreshToken);
+  } catch (error) {
+    throw new ApiError(401, 'Invalid refresh token');
+  }
+
+  const user = await authRepository.findById(decoded.id, true);
+  if (!user || !user.refreshToken || user.refreshToken !== refreshToken) {
+    throw new ApiError(401, 'Refresh token is not recognized');
+  }
+
+  const tokens = buildTokens(user);
+  await authRepository.updateRefreshToken(user._id, tokens.refreshToken);
+
+  return { tokens };
+};
+
+const logout = async (userId) => {
+  await authRepository.updateRefreshToken(userId, null);
+  return { loggedOut: true };
+};
+
 module.exports = {
   register,
   login,
+  refreshSession,
+  logout,
 };
