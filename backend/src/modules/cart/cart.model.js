@@ -29,7 +29,6 @@ const cartSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
       unique: true,
-      index: true,
     },
     items: {
       type: [cartItemSchema],
@@ -46,7 +45,5 @@ const cartSchema = new mongoose.Schema(
     },
   }
 );
-
-cartSchema.index({ user: 1 });
 
 module.exports = mongoose.model('Cart', cartSchema);

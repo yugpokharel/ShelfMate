@@ -16,7 +16,6 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Invalid email format'],
-      index: true,
     },
     password: {
       type: String,
@@ -56,7 +55,5 @@ const userSchema = new mongoose.Schema(
     },
   }
 );
-
-userSchema.index({ email: 1 });
 
 module.exports = mongoose.model('User', userSchema);

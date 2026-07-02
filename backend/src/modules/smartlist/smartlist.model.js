@@ -16,7 +16,6 @@ const smartListSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
       unique: true,
-      index: true,
     },
     items: { type: [smartListItemSchema], default: [] },
     lastGenerated: { type: Date, default: null },
@@ -31,7 +30,5 @@ const smartListSchema = new mongoose.Schema(
     },
   }
 );
-
-smartListSchema.index({ user: 1 });
 
 module.exports = mongoose.model('SmartList', smartListSchema);

@@ -14,7 +14,6 @@ const categorySchema = new mongoose.Schema(
       trim: true,
       unique: true,
       lowercase: true,
-      index: true,
     },
     icon: {
       type: String,
@@ -27,7 +26,6 @@ const categorySchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
-      index: true,
     },
   },
   {
@@ -40,7 +38,5 @@ const categorySchema = new mongoose.Schema(
     },
   }
 );
-
-categorySchema.index({ slug: 1 });
 
 module.exports = mongoose.model('Category', categorySchema);
