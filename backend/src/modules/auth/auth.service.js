@@ -5,6 +5,14 @@ const ApiError = require('../../utils/ApiError');
 
 const buildTokenPayload = (user) => ({ id: user._id.toString(), role: user.role });
 
+const buildTokens = (user) => {
+  const payload = buildTokenPayload(user);
+  return {
+    accessToken: generateAccessToken(payload),
+    refreshToken: generateRefreshToken(payload),
+  };
+};
+
 const register = async ({ name, email, password, postcode, dietaryPreferences }) => {
   const existingUser = await authRepository.findByEmail(email);
   if (existingUser) {
@@ -20,18 +28,31 @@ const register = async ({ name, email, password, postcode, dietaryPreferences })
     dietaryPreferences: dietaryPreferences || [],
   });
 
-  const payload = buildTokenPayload(user);
-  const accessToken = generateAccessToken(payload);
-  const refreshToken = generateRefreshToken(payload);
+  const tokens = buildTokens(user);
+  await authRepository.updateRefreshToken(user._id, tokens.refreshToken);
 
-  await authRepository.updateRefreshToken(user._id, refreshToken);
+  return { user, tokens };
+};
 
-  return {
-    user,
-    tokens: { accessToken, refreshToken },
-  };
+const login = async ({ email, password }) => {
+  const user = await authRepository.findByEmail(email, true);
+  if (!user) {
+    throw new ApiError(401, 'Invalid email or password');
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new ApiError(401, 'Invalid email or password');
+  }
+
+  const tokens = buildTokens(user);
+  await authRepository.updateRefreshToken(user._id, tokens.refreshToken);
+
+  const safeUser = await authRepository.findById(user._id);
+  return { user: safeUser, tokens };
 };
 
 module.exports = {
   register,
+  login,
 };
