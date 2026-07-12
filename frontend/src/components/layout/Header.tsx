@@ -1,5 +1,4 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { ShoppingCart, Search, Menu, X, LogOut, User } from 'lucide-react'
 import { useState } from 'react'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { logout } from '@/store/slices/authSlice'
@@ -24,23 +23,26 @@ export function Header() {
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-border shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold">SM</span>
-          </div>
-          <span className="font-bold text-xl hidden sm:inline">ShelfMate</span>
+    <nav className="sticky top-0 z-50 flex justify-between items-center px-lg py-sm w-full bg-surface-container-lowest border-b border-outline-variant">
+      <div className="flex items-center gap-xl">
+        <Link to="/" className="font-headline-md text-headline-md font-bold text-primary cursor-pointer">
+          ShelfMate
         </Link>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-lg">
+          <Link
+            to="/"
+            className={clsx(
+              'font-label-caps text-label-caps transition-all pb-1 cursor-pointer hover:text-primary',
+              isActive('/') ? 'text-primary border-b-2 border-primary' : 'text-secondary'
+            )}
+          >
+            Home
+          </Link>
           <Link
             to="/shop"
             className={clsx(
-              'text-sm font-medium transition-colors',
-              isActive('/shop') ? 'text-accent' : 'text-foreground hover:text-accent'
+              'font-label-caps text-label-caps transition-all pb-1 cursor-pointer hover:text-primary',
+              isActive('/shop') ? 'text-primary border-b-2 border-primary' : 'text-secondary'
             )}
           >
             Shop
@@ -48,8 +50,8 @@ export function Header() {
           <Link
             to="/deals"
             className={clsx(
-              'text-sm font-medium transition-colors',
-              isActive('/deals') ? 'text-accent' : 'text-foreground hover:text-accent'
+              'font-label-caps text-label-caps transition-all pb-1 cursor-pointer hover:text-primary',
+              isActive('/deals') ? 'text-primary border-b-2 border-primary' : 'text-secondary'
             )}
           >
             Deals
@@ -57,117 +59,116 @@ export function Header() {
           <Link
             to="/smart-lists"
             className={clsx(
-              'text-sm font-medium transition-colors',
-              isActive('/smart-lists') ? 'text-accent' : 'text-foreground hover:text-accent'
+              'font-label-caps text-label-caps transition-all pb-1 cursor-pointer hover:text-primary',
+              isActive('/smart-lists') ? 'text-primary border-b-2 border-primary' : 'text-secondary'
             )}
           >
-            Smart Lists
+            Smart List
           </Link>
-        </nav>
+        </div>
+      </div>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-4">
-          {/* Search (visible on larger screens) */}
-          <div className="hidden lg:flex items-center bg-secondary rounded-lg px-3 py-2">
-            <Search className="w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="bg-transparent ml-2 outline-none w-40 text-sm"
-            />
-          </div>
-
-          {/* Cart */}
-          <Link to="/cart" className="relative p-2 hover:bg-secondary rounded-lg transition">
-            <ShoppingCart className="w-5 h-5" />
+      <div className="flex items-center gap-md">
+        {/* Search, Cart, Profile Icons */}
+        <div className="hidden md:flex items-center gap-sm">
+          <Link to="/shop" className="material-symbols-outlined text-on-surface-variant p-sm hover:bg-surface-container-low transition-colors rounded-full text-2xl">
+            search
+          </Link>
+          <Link to="/cart" className="relative material-symbols-outlined text-on-surface-variant p-sm hover:bg-surface-container-low transition-colors rounded-full text-2xl">
+            shopping_cart
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {cartCount > 9 ? '9+' : cartCount}
+              <span className="absolute top-1 right-1 bg-primary text-on-primary text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center font-sans">
+                {cartCount}
               </span>
             )}
           </Link>
-
-          {/* User Menu */}
-          {user ? (
+          {user && (
             <div className="relative">
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="p-2 hover:bg-secondary rounded-lg transition"
+                className="material-symbols-outlined text-on-surface-variant p-sm hover:bg-surface-container-low transition-colors rounded-full text-2xl block"
               >
-                <img
-                  src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
-                  alt={user.name}
-                  className="w-6 h-6 rounded-full"
-                />
+                account_circle
               </button>
-
               {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-lg py-2">
+                <div className="absolute right-0 mt-2 w-48 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg py-2 z-50">
+                  <div className="px-4 py-2 border-b border-outline-variant">
+                    <p className="text-body-sm font-bold truncate">{user.name}</p>
+                    <p className="text-[11px] text-secondary truncate">{user.email}</p>
+                  </div>
                   <Link
                     to="/account"
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-secondary text-sm"
+                    className="flex items-center gap-sm px-4 py-2 hover:bg-surface-container-low text-body-sm text-on-surface transition-colors"
                     onClick={() => setIsProfileOpen(false)}
                   >
-                    <User className="w-4 h-4" />
+                    <span className="material-symbols-outlined text-lg">person</span>
                     My Account
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-4 py-2 hover:bg-secondary text-sm text-left text-red-600"
+                    className="w-full flex items-center gap-sm px-4 py-2 hover:bg-surface-container-low text-body-sm text-left text-error transition-colors"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <span className="material-symbols-outlined text-lg">logout</span>
                     Logout
                   </button>
                 </div>
               )}
             </div>
-          ) : (
-            <Link
-              to="/login"
-              className="px-4 py-2 text-sm font-medium text-accent hover:bg-secondary rounded-lg transition"
-            >
-              Login
-            </Link>
           )}
+        </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 hover:bg-secondary rounded-lg transition"
-          >
-            {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-sm">
+          {!user ? (
+            <>
+              <Link to="/login" className="font-button text-button text-primary px-md py-sm hover:bg-surface-container-low transition-colors rounded-lg">
+                Sign In
+              </Link>
+              <Link to="/signup" className="font-button text-button bg-primary-container text-on-primary-container px-md py-sm rounded-lg hover:opacity-90 transition-opacity">
+                Sign Up
+              </Link>
+            </>
+          ) : (
+            <div className="md:hidden flex items-center gap-sm">
+              <Link to="/cart" className="relative material-symbols-outlined text-on-surface-variant p-sm hover:bg-surface-container-low transition-colors rounded-full text-2xl">
+                shopping_cart
+                {cartCount > 0 && (
+                  <span className="absolute top-1 right-1 bg-primary text-on-primary text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center font-sans">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="material-symbols-outlined text-on-surface-variant p-sm hover:bg-surface-container-low transition-colors rounded-full text-2xl"
+              >
+                menu
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Mobile Menu */}
-      {isMenuOpen && (
-        <nav className="md:hidden border-t border-border bg-secondary">
-          <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-3">
-            <Link
-              to="/shop"
-              className="px-4 py-2 hover:bg-white rounded-lg"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Shop
-            </Link>
-            <Link
-              to="/deals"
-              className="px-4 py-2 hover:bg-white rounded-lg"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Deals
-            </Link>
-            <Link
-              to="/smart-lists"
-              className="px-4 py-2 hover:bg-white rounded-lg"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Smart Lists
-            </Link>
-          </div>
+      {isMenuOpen && user && (
+        <nav className="absolute top-full left-0 right-0 border-t border-outline-variant bg-surface-container-lowest shadow-md md:hidden z-50 flex flex-col p-md">
+          <Link
+            to="/account"
+            className="flex items-center gap-sm p-sm hover:bg-surface-container-low rounded-lg text-body-lg text-on-surface"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <span className="material-symbols-outlined text-xl">person</span>
+            My Account
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-sm p-sm hover:bg-surface-container-low rounded-lg text-body-lg text-error text-left"
+          >
+            <span className="material-symbols-outlined text-xl">logout</span>
+            Logout
+          </button>
         </nav>
       )}
-    </header>
+    </nav>
   )
 }

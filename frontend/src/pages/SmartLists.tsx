@@ -1,132 +1,177 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { mockSmartLists } from '@/data/mockData'
-import { Button } from '@/components/ui/Button'
 import { useAppDispatch } from '@/store/hooks'
 import { addToCart } from '@/store/slices/cartSlice'
 import { useNotification } from '@/context/NotificationContext'
-import { Plus, Sparkles, RotateCw } from 'lucide-react'
 
 export default function SmartLists() {
   const dispatch = useAppDispatch()
   const { addNotification } = useNotification()
 
-  const handleAddListToCart = (list: typeof mockSmartLists[0]) => {
+  const [lists, setLists] = useState(() =>
+    mockSmartLists.map((list) => ({
+      ...list,
+      items: list.items.map((item) => ({
+        ...item,
+        // Convert mock prices from INR to USD style just for display matching the design
+        price: item.product.price > 20 ? item.product.price / 40 : item.product.price,
+      })),
+    }))
+  )
+
+  const handleQtyChange = (listId: string, itemId: string, delta: number) => {
+    setLists((prevLists) =>
+      prevLists.map((list) => {
+        if (list.id !== listId) return list
+        return {
+          ...list,
+          items: list.items.map((item) => {
+            if (item.id !== itemId) return item
+            return {
+              ...item,
+              quantity: Math.max(1, item.quantity + delta),
+            }
+          }),
+        }
+      })
+    )
+  }
+
+  const handleRemoveItem = (listId: string, itemId: string, name: string) => {
+    setLists((prevLists) =>
+      prevLists.map((list) => {
+        if (list.id !== listId) return list
+        return {
+          ...list,
+          items: list.items.filter((item) => item.id !== itemId),
+        }
+      })
+    )
+    addNotification(`${name} removed from Smart List.`, 'info')
+  }
+
+  const handleAddListToCart = (list: typeof lists[0]) => {
     list.items.forEach((item) => {
       dispatch(addToCart({ product: item.product, quantity: item.quantity }))
     })
-    addNotification(`${list.name} added to cart!`, 'success')
+    addNotification(`${list.name} items added to cart!`, 'success')
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-4">
-            <Sparkles className="w-8 h-8 text-accent" />
-            <h1 className="text-4xl font-bold">Smart Lists</h1>
+    <div className="flex min-h-screen text-on-surface select-none font-body-lg bg-background">
+      {/* SideNavBar - predicted component */}
+      <aside className="hidden md:flex flex-col h-screen w-64 rounded-r-xl sticky top-0 bg-surface-container-low py-lg gap-base shrink-0 z-40 border-r border-outline-variant">
+        <div className="px-md mb-lg">
+          <span className="text-headline-md font-headline-md font-bold text-primary">ShelfMate</span>
+          <div className="mt-xl flex items-center gap-md">
+            <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary">person</span>
+            </div>
+            <div>
+              <p className="text-label-caps font-label-caps text-on-surface">Dashboard</p>
+              <p className="text-body-sm font-body-sm text-on-surface-variant">Smart kitchen tracker</p>
+            </div>
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            AI-powered lists that remember your preferences and help you shop smarter. Create personalized lists for your routine grocery needs.
-          </p>
         </div>
+        <nav className="flex flex-col gap-xs px-sm">
+          <Link to="/" className="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-highest transition-colors rounded-lg group">
+            <span className="material-symbols-outlined group-hover:scale-110 transition-transform">dashboard</span>
+            <span className="text-label-caps font-label-caps">Home</span>
+          </Link>
+          <Link to="/shop" className="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-highest transition-colors rounded-lg group">
+            <span className="material-symbols-outlined group-hover:scale-110 transition-transform">store</span>
+            <span className="text-label-caps font-label-caps">Shop</span>
+          </Link>
+          <div className="flex items-center gap-sm bg-primary-container text-on-primary-container rounded-lg px-md py-sm translate-x-1 transition-all">
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>format_list_bulleted</span>
+            <span className="text-label-caps font-label-caps">Smart List</span>
+          </div>
+          <Link to="/account" className="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-highest transition-colors rounded-lg group">
+            <span className="material-symbols-outlined group-hover:scale-110 transition-transform">account_circle</span>
+            <span className="text-label-caps font-label-caps">Account</span>
+          </Link>
+        </nav>
+      </aside>
 
-        {/* Create List Button */}
-        <div className="mb-12">
-          <Button size="lg" className="gap-2">
-            <Plus className="w-5 h-5" />
-            Create New List
-          </Button>
-        </div>
-
-        {/* Smart Lists Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {mockSmartLists.map((list) => (
-            <div
-              key={list.id}
-              className="bg-white rounded-lg border border-border overflow-hidden hover:shadow-lg transition-shadow"
-            >
-              <div className="bg-gradient-to-r from-accent to-accent/80 text-white p-6">
-                <h2 className="text-2xl font-bold mb-2">{list.name}</h2>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-white/80">{list.items.length} items</span>
-                  {list.frequency && (
-                    <div className="flex items-center gap-1 text-sm">
-                      <RotateCw className="w-4 h-4" />
+      {/* Main Content Area */}
+      <main className="flex-grow flex flex-col min-w-0 pb-2xl px-md md:px-lg">
+        {lists.map((list) => {
+          const listTotal = list.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+          return (
+            <div key={list.id} className="mt-8 border-b border-outline-variant/30 pb-xl last:border-b-0">
+              <header className="flex flex-col md:flex-row md:items-end justify-between gap-md mb-lg">
+                <div>
+                  <h1 className="text-headline-lg font-headline-lg text-on-surface font-extrabold">{list.name}</h1>
+                  <div className="flex items-center gap-xs mt-xs">
+                    <span className="text-body-sm font-body-sm text-on-surface-variant"> AI Predicted List</span>
+                    <span className="text-on-surface-variant text-body-sm">•</span>
+                    <span className="text-label-caps font-label-caps text-primary bg-primary-container/20 px-sm py-[2px] rounded-full uppercase tracking-wider font-bold">
                       {list.frequency}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Items */}
-              <div className="p-6">
-                <div className="space-y-3 mb-6">
-                  {list.items.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between pb-3 border-b border-border last:border-b-0">
-                      <div>
-                        <p className="font-semibold">{item.product.name}</p>
-                        <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                      </div>
-                      <p className="font-bold">₹{item.product.price * item.quantity}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Total */}
-                <div className="mb-6 pb-6 border-t-2 border-border pt-4">
-                  <div className="flex justify-between mb-4">
-                    <span className="font-semibold">Total</span>
-                    <span className="font-bold text-lg">
-                      ₹{list.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)}
                     </span>
                   </div>
                 </div>
-
-                {/* Actions */}
-                <div className="space-y-3">
-                  <Button
+                <div className="flex gap-md">
+                  <button
                     onClick={() => handleAddListToCart(list)}
-                    className="w-full"
+                    className="bg-primary text-on-primary font-button text-button px-lg py-sm rounded-xl hover:opacity-90 transition-opacity flex items-center gap-xs cursor-pointer shadow-sm"
                   >
-                    Add to Cart
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    Edit List
-                  </Button>
+                    <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
+                    Add list to Cart (${listTotal.toFixed(2)})
+                  </button>
                 </div>
+              </header>
+
+              {/* Items List */}
+              <div className="bg-surface-container-lowest rounded-xl custom-shadow overflow-hidden border border-outline-variant/30">
+                {list.items.length > 0 ? (
+                  list.items.map((item) => (
+                    <div key={item.id} className="flex items-center p-md border-b border-surface-container gap-md last:border-b-0">
+                      <div className="w-16 h-16 rounded-lg bg-surface-container shrink-0 overflow-hidden">
+                        <img className="w-full h-full object-cover" alt={item.product.name} src={item.product.image} />
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <h3 className="text-body-lg font-headline-md font-semibold truncate">{item.product.name}</h3>
+                        <div className="flex gap-xs mt-xs">
+                          <span className="text-label-caps font-label-caps px-sm py-1 bg-primary/10 text-primary rounded-full text-[10px] uppercase font-bold tracking-wider">
+                            {item.product.category}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-md">
+                        <div className="flex items-center bg-surface-container-low rounded-xl p-xs gap-sm">
+                          <button
+                            onClick={() => handleQtyChange(list.id, item.id, -1)}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant"
+                          >
+                            <span className="material-symbols-outlined text-sm">remove</span>
+                          </button>
+                          <span className="w-8 text-center font-bold text-body-lg">{item.quantity}</span>
+                          <button
+                            onClick={() => handleQtyChange(list.id, item.id, 1)}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container transition-colors text-primary"
+                          >
+                            <span className="material-symbols-outlined text-sm">add</span>
+                          </button>
+                        </div>
+                        <span className="text-body-lg font-headline-md w-20 text-right font-bold text-primary">${(item.price * item.quantity).toFixed(2)}</span>
+                        <button
+                          onClick={() => handleRemoveItem(list.id, item.id, item.product.name)}
+                          className="p-sm text-error hover:bg-error-container rounded-lg transition-colors"
+                        >
+                          <span className="material-symbols-outlined">delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-xl text-center text-on-surface-variant">No items left in this Smart List</div>
+                )}
               </div>
             </div>
-          ))}
-        </div>
-
-        {/* Info Section */}
-        <div className="mt-16 bg-secondary rounded-lg p-8">
-          <h2 className="text-2xl font-bold mb-4">How Smart Lists Work</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <div className="text-4xl font-bold text-accent mb-3">1</div>
-              <h3 className="font-semibold mb-2">Create Lists</h3>
-              <p className="text-muted-foreground">
-                Add your favorite products and create personalized shopping lists based on your routine.
-              </p>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-accent mb-3">2</div>
-              <h3 className="font-semibold mb-2">AI Recommendations</h3>
-              <p className="text-muted-foreground">
-                Our AI learns your preferences and suggests similar items to enhance your shopping.
-              </p>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-accent mb-3">3</div>
-              <h3 className="font-semibold mb-2">One-Click Reorder</h3>
-              <p className="text-muted-foreground">
-                Reorder your favorite lists with just one click and get them delivered to your door.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+          );
+        })}
+      </main>
     </div>
   )
 }
