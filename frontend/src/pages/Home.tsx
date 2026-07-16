@@ -1,8 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { setProducts, setSearchFilter, setCategoryFilter } from '@/store/slices/productsSlice'
-import { mockProducts } from '@/data/mockProducts'
+import { setSearchFilter, setCategoryFilter } from '@/store/slices/productsSlice'
 import { addToCart } from '@/store/slices/cartSlice'
 import { useNotification } from '@/context/NotificationContext'
 
@@ -13,10 +12,7 @@ export default function Home() {
   const [searchVal, setSearchVal] = useState('')
 
   const products = useAppSelector((state) => state.products.filteredProducts).slice(0, 8)
-
-  useEffect(() => {
-    dispatch(setProducts(mockProducts))
-  }, [dispatch])
+  const user = useAppSelector((state) => state.auth.user)
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,6 +28,11 @@ export default function Home() {
   const handleAddToCart = (e: React.MouseEvent, product: any) => {
     e.preventDefault()
     e.stopPropagation()
+    if (!user) {
+      addNotification('Please log in to add items to your cart', 'error')
+      navigate('/login')
+      return
+    }
     dispatch(addToCart({ product, quantity: 1 }))
     addNotification(`${product.name} was added to your Cart.`, 'success')
   }

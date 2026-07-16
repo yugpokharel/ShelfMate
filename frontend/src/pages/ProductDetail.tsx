@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useAppDispatch } from '@/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { addToCart } from '@/store/slices/cartSlice'
-import { mockProducts } from '@/data/mockProducts'
 import { useNotification } from '@/context/NotificationContext'
 
 export default function ProductDetail() {
@@ -14,7 +13,9 @@ export default function ProductDetail() {
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [selectedWeight, setSelectedWeight] = useState('250g')
 
-  const product = mockProducts.find((p) => p.id === id)
+  const products = useAppSelector((state) => state.products.products)
+  const user = useAppSelector((state) => state.auth.user)
+  const product = products.find((p) => p.id === id)
 
   if (!product) {
     return (
@@ -33,6 +34,11 @@ export default function ProductDetail() {
   }
 
   const handleAddToCart = () => {
+    if (!user) {
+      addNotification('Please log in to add items to your cart', 'error')
+      navigate('/login')
+      return
+    }
     dispatch(addToCart({ product, quantity }))
     addNotification(`${product.name} was added to your Cart.`, 'success')
   }
@@ -45,7 +51,7 @@ export default function ProductDetail() {
     )
   }
 
-  const similarProducts = mockProducts
+  const similarProducts = products
     .filter((p) => p.category === product.category && p.id !== product.id)
     .slice(0, 4)
 

@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import {
-  setProducts,
   setSearchFilter,
   setCategoryFilter,
   setPriceFilter,
   resetFilters,
 } from '@/store/slices/productsSlice'
-import { mockProducts } from '@/data/mockProducts'
 import { addToCart } from '@/store/slices/cartSlice'
 import { useNotification } from '@/context/NotificationContext'
 
@@ -16,6 +14,7 @@ const categories = ['All', 'Vegetables', 'Fruits', 'Dairy & Eggs', 'Bakery', 'Pa
 
 export default function Shop() {
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const { addNotification } = useNotification()
 
   const [selectedCategory, setSelectedCategory] = useState('All')
@@ -25,10 +24,7 @@ export default function Shop() {
   const [inStockOnly, setInStockOnly] = useState(false)
 
   const filteredProducts = useAppSelector((state) => state.products.filteredProducts)
-
-  useEffect(() => {
-    dispatch(setProducts(mockProducts))
-  }, [dispatch])
+  const user = useAppSelector((state) => state.auth.user)
 
   // Sync category state from Redux (e.g. if navigated from home category cards)
   const reduxCategory = useAppSelector((state) => state.products.filters.category)
@@ -81,6 +77,11 @@ export default function Shop() {
   const handleAddToCart = (e: React.MouseEvent, product: any) => {
     e.preventDefault()
     e.stopPropagation()
+    if (!user) {
+      addNotification('Please log in to add items to your cart', 'error')
+      navigate('/login')
+      return
+    }
     dispatch(addToCart({ product, quantity: 1 }))
     addNotification(`${product.name} was added to your Cart.`, 'success')
   }

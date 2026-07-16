@@ -1,13 +1,20 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { mockSmartLists } from '@/data/mockData'
-import { useAppDispatch } from '@/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { addToCart } from '@/store/slices/cartSlice'
 import { useNotification } from '@/context/NotificationContext'
 
 export default function SmartLists() {
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const { addNotification } = useNotification()
+  const user = useAppSelector((state) => state.auth.user)
+
+  if (!user) {
+    navigate('/login')
+    return null
+  }
 
   const [lists, setLists] = useState(() =>
     mockSmartLists.map((list) => ({

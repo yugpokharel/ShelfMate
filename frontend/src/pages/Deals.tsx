@@ -1,30 +1,36 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { mockDeals, mockProducts } from '@/data/mockData'
+import { Link, useNavigate } from 'react-router-dom'
+import { mockDeals } from '@/data/mockData'
 import { Zap, Clock } from 'lucide-react'
-import { useAppDispatch } from '@/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { addToCart } from '@/store/slices/cartSlice'
 import { Button } from '@/components/ui/Button'
 import { useNotification } from '@/context/NotificationContext'
+import { Product } from '@/types'
 
 interface DealWithProduct {
   deal: typeof mockDeals[0]
-  product: typeof mockProducts[0]
+  product: Product
 }
 
 export default function Deals() {
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const { addNotification } = useNotification()
+  const products = useAppSelector((state) => state.products.products)
+  const user = useAppSelector((state) => state.auth.user)
   const [deals, setDeals] = useState<DealWithProduct[]>([])
   const [timeLeft, setTimeLeft] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    const dealsWithProducts = mockDeals.map((deal) => ({
-      deal,
-      product: mockProducts.find((p) => p.id === deal.productId)!,
-    }))
+    if (products.length === 0) return
+    const dealsWithProducts = mockDeals
+      .map((deal) => ({
+        deal,
+        product: products[Math.floor(Math.random() * products.length)],
+      }))
     setDeals(dealsWithProducts)
-  }, [])
+  }, [products])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -48,7 +54,12 @@ export default function Deals() {
     return () => clearInterval(interval)
   }, [deals])
 
-  const handleQuickAdd = (product: typeof mockProducts[0]) => {
+  const handleQuickAdd = (product: Product) => {
+    if (!user) {
+      addNotification('Please log in to add items to your cart', 'error')
+      navigate('/login')
+      return
+    }
     dispatch(addToCart({ product, quantity: 1 }))
     addNotification(`${product.name} added to cart!`, 'success')
   }
