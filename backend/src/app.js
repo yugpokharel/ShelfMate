@@ -19,7 +19,19 @@ const smartListRoutes = require('./modules/smartlist/smartlist.routes');
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: env.corsOrigin }));
+const allowedOrigins = env.corsOrigin.split(',').map((o) => o.trim())
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true)
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`))
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 app.use(compression());
 app.use(express.json());

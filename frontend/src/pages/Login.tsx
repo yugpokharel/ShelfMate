@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch } from '@/store/hooks'
-import { loginSuccess } from '@/store/slices/authSlice'
-import { mockUser } from '@/data/mockData'
+import { loginUser } from '@/store/slices/authSlice'
 import { useNotification } from '@/context/NotificationContext'
 
 export default function Login() {
@@ -18,13 +17,15 @@ export default function Login() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      dispatch(loginSuccess(mockUser))
+    try {
+      await dispatch(loginUser({ email, password })).unwrap()
       addNotification('Logged in successfully!', 'success')
       navigate('/')
+    } catch (err: any) {
+      addNotification(err || 'Invalid email or password', 'error')
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (

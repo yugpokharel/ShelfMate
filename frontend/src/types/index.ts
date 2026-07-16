@@ -36,6 +36,8 @@ export interface User {
   avatar?: string
   addresses: Address[]
   defaultAddressId?: string
+  dietaryPreferences?: string[]
+  postcode?: string
 }
 
 export interface Address {

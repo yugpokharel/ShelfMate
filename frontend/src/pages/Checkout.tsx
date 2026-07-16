@@ -11,6 +11,7 @@ import {
   setOrderNotes,
 } from '@/store/slices/checkoutSlice'
 import { clearCart } from '@/store/slices/cartSlice'
+import { createOrder } from '@/store/slices/ordersSlice'
 import { useNotification } from '@/context/NotificationContext'
 
 export default function Checkout() {
@@ -61,8 +62,13 @@ export default function Checkout() {
     }
   }
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!checkout.shippingAddress) {
+      addNotification('Please select a shipping address', 'error')
+      return
+    }
+
     dispatch(setProcessing(true))
     dispatch(setOrderNotes(notes))
 
@@ -70,14 +76,30 @@ export default function Checkout() {
       dispatch(setCardDetails({ cardNumber, cardHolder, expiry, cvv }))
     }
 
-    setTimeout(() => {
-      const orderId = `SM-${Math.floor(1000 + Math.random() * 9000)}-01X`
-      dispatch(setOrderId(orderId))
+    try {
+      const order = await dispatch(
+        createOrder({
+          address: {
+            line1: checkout.shippingAddress.street,
+            line2: checkout.shippingAddress.label,
+            city: checkout.shippingAddress.city,
+            postcode: checkout.shippingAddress.zipCode,
+          },
+          deliverySlot: `${activeDateTab}, ${selectedSlot}`,
+          paymentMethod: checkout.paymentMethod || 'card',
+          deliveryFee,
+        })
+      ).unwrap()
+
+      dispatch(setOrderId(order.id))
       dispatch(clearCart())
       addNotification('Order placed successfully!', 'success')
-      dispatch(setProcessing(false))
       dispatch(setCurrentStep(4))
-    }, 1500)
+    } catch (err: any) {
+      addNotification(err || 'Failed to place order', 'error')
+    } finally {
+      dispatch(setProcessing(false))
+    }
   }
 
   const handleSelectAddress = (addr: any) => {

@@ -1,10 +1,13 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { Product } from '@/types'
+import { apiFetch } from '@/utils/api'
+import { mapBackendProductToFrontend } from '@/utils/mappings'
 
 interface ProductsState {
   products: Product[]
   filteredProducts: Product[]
   isLoading: boolean
+  error: string | null
   filters: {
     category?: string
     priceRange: [number, number]
@@ -17,6 +20,7 @@ const initialState: ProductsState = {
   products: [],
   filteredProducts: [],
   isLoading: false,
+  error: null,
   filters: {
     category: undefined,
     priceRange: [0, 1000],
@@ -25,13 +29,26 @@ const initialState: ProductsState = {
   },
 }
 
+export const fetchProducts = createAsyncThunk(
+  'products/fetchProducts',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiFetch('/products?limit=100')
+      const items = response.data.items || []
+      return items.map((p: any) => mapBackendProductToFrontend(p))
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Failed to fetch products')
+    }
+  }
+)
+
 const productsSlice = createSlice({
   name: 'products',
   initialState,
   reducers: {
     setProducts: (state, action: PayloadAction<Product[]>) => {
       state.products = action.payload
-      state.filteredProducts = action.payload
+      applyFilters(state)
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload
@@ -61,6 +78,21 @@ const productsSlice = createSlice({
       }
       state.filteredProducts = state.products
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(fetchProducts.pending, (state) => {
+      state.isLoading = true
+      state.error = null
+    })
+    builder.addCase(fetchProducts.fulfilled, (state, action) => {
+      state.isLoading = false
+      state.products = action.payload
+      applyFilters(state)
+    })
+    builder.addCase(fetchProducts.rejected, (state, action) => {
+      state.isLoading = false
+      state.error = action.payload as string
+    })
   },
 })
 

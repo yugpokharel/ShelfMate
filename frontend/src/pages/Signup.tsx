@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch } from '@/store/hooks'
-import { registerSuccess } from '@/store/slices/authSlice'
+import { registerUser } from '@/store/slices/authSlice'
 import { useNotification } from '@/context/NotificationContext'
 
 export default function Signup() {
@@ -25,21 +25,15 @@ export default function Signup() {
 
     setIsLoading(true)
 
-    setTimeout(() => {
-      const newUser = {
-        id: `user-${Date.now()}`,
-        name,
-        email,
-        phone: '',
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-        addresses: [],
-        defaultAddressId: undefined,
-      }
-      dispatch(registerSuccess(newUser))
+    try {
+      await dispatch(registerUser({ name, email, password })).unwrap()
       addNotification('Account created successfully!', 'success')
       navigate('/')
+    } catch (err: any) {
+      addNotification(err || 'Registration failed. Please try again.', 'error')
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (

@@ -1,13 +1,13 @@
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { useNavigate, Link } from 'react-router-dom'
-import { mockOrders } from '@/data/mockData'
-import { logout } from '@/store/slices/authSlice'
+import { logoutUser } from '@/store/slices/authSlice'
 import { useState } from 'react'
 
 export default function Account() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const user = useAppSelector((state) => state.auth.user)
+  const orders = useAppSelector((state) => state.orders.orders)
   const [activeTab, setActiveTab] = useState<'Preferences' | 'Addresses' | 'Orders'>('Preferences')
 
   if (!user) {
@@ -15,8 +15,8 @@ export default function Account() {
     return null
   }
 
-  const handleLogout = () => {
-    dispatch(logout())
+  const handleLogout = async () => {
+    await dispatch(logoutUser())
     navigate('/')
   }
 
@@ -178,7 +178,7 @@ export default function Account() {
         {activeTab === 'Orders' && (
           <div className="space-y-md">
             <h2 className="font-headline-md text-headline-md font-bold text-on-surface mb-md">Order History</h2>
-            {mockOrders.map((order) => (
+            {orders.map((order) => (
               <div key={order.id} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm">
                 <div className="flex justify-between items-start mb-md">
                   <div>

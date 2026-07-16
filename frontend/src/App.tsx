@@ -17,7 +17,47 @@ import Account from '@/pages/Account'
 import SmartLists from '@/pages/SmartLists'
 import Deals from '@/pages/Deals'
 
+import { useEffect } from 'react'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import { fetchCurrentUser, logout } from '@/store/slices/authSlice'
+import { fetchProducts } from '@/store/slices/productsSlice'
+import { fetchCart } from '@/store/slices/cartSlice'
+import { fetchOrders } from '@/store/slices/ordersSlice'
+import { getTokens } from '@/utils/api'
+
 function AppContent() {
+  const dispatch = useAppDispatch()
+  const { isAuthenticated } = useAppSelector((state) => state.auth)
+
+  useEffect(() => {
+    // 1. Fetch products immediately on startup
+    dispatch(fetchProducts())
+
+    // 2. Fetch current user if token exists in localStorage
+    const { accessToken } = getTokens()
+    if (accessToken) {
+      dispatch(fetchCurrentUser())
+    }
+
+    // 3. Listen for token refresh expiry (unauthorized events) to log out cleanly
+    const handleUnauthorized = () => {
+      dispatch(logout())
+    }
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized)
+    }
+  }, [dispatch])
+
+  // Fetch cart and orders once user becomes authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchCart())
+      dispatch(fetchOrders())
+    }
+  }, [isAuthenticated, dispatch])
+
   return (
     <NotificationProvider>
       <Router>
